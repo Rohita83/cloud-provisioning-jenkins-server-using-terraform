@@ -1,0 +1,48 @@
+pipeline {
+    agent any
+    tools {
+       terraform 'terraform'
+    }
+    environment {
+        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
+        BRANCH = "main"
+    }
+    stages {
+        stage('Git checkout') {
+           steps{
+                echo 'Cloning repository'
+                git branch: "${BRANCH}", credentialsId: 'Github', url: 'https://github.com/Rohita83/cloud-provisioning.git'
+                echo 'Cloning Done'
+                echo "${env.BRANCH}"
+                echo "${env.AWS_ACCESS_KEY_ID}"
+           }
+        }
+        stage('terraform format check') {
+            steps{
+                dir("aws") {
+                    sh 'terraform fmt'
+                }    
+            }
+        }
+        stage('terraform Init') {
+            steps{
+                dir("aws") {
+                    sh 'terraform init'
+                }    
+            }
+        }
+        stage('terraform plan') {
+            steps{
+                dir("aws") {
+                    sh 'terraform plan'
+                }   
+            }
+        }
+        // stage('terraform apply') {
+        //     steps{
+        //         sh 'terraform apply --auto-approve'
+        //     }
+        // }
+    }
+}
